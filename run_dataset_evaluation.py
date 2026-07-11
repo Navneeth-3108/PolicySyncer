@@ -7,10 +7,11 @@ findings_labels.csv/.json ground truth.
 Usage:
     python run_dataset_evaluation.py [dataset_dir] [--json]
 
-dataset_dir defaults to ../dataset/problem_11 relative to this repo if not
-given (i.e. the sibling `dataset.zip` extraction used during development);
-pass an explicit path if your dataset lives elsewhere. --json prints raw
-JSON instead of the human-readable summary (useful for scripting/CI).
+dataset_dir defaults to the bundled `dataset/` directory next to this repo
+if present, falling back to `../dataset/problem_11`-style locations used
+during development; pass an explicit path if your dataset lives elsewhere.
+--json prints raw JSON instead of the human-readable summary (useful for
+scripting/CI).
 """
 
 import json
@@ -28,6 +29,7 @@ from dataset_integration.evaluate import run_evaluation  # noqa: E402
 def _default_dataset_dir() -> str:
     # Common locations this dataset tends to get extracted to.
     candidates = [
+        os.path.join(root_dir, "dataset"),
         os.path.join(root_dir, "..", "dataset", "problem_11"),
         os.path.join(root_dir, "dataset", "problem_11"),
         os.path.join(root_dir, "problem_11"),

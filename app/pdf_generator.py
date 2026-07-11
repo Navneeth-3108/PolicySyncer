@@ -102,7 +102,9 @@ def generate_report_pdf(report: dict) -> bytes:
         for idx, finding in enumerate(findings, 1):
             severity = finding.get("severity", "LOW")
             f_type = finding.get("finding_type", "INFO")
-            policy_name = finding.get("policy", "Unknown Policy")
+            policy_name = finding.get("policy") or " / ".join(
+                p for p in (finding.get("policy_a"), finding.get("policy_b")) if p
+            ) or "Unknown Policy"
             description = finding.get("description", "")
             recommendation = finding.get("recommendation", "")
             compliance = finding.get("compliance_impact", [])

@@ -2,7 +2,7 @@ import sys
 import json
 from pathlib import Path
 from fastapi import FastAPI, Request, UploadFile, File, Form, HTTPException, Response
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
 # Add all layer directories to sys.path (same as run_pipeline.py)
@@ -26,10 +26,25 @@ app = FastAPI(title="Policy Analyzer Web UI")
 templates_dir = Path(__file__).resolve().parent / "templates"
 templates = Jinja2Templates(directory=str(templates_dir))
 
+NO_OBLIGATIONS_MESSAGE = (
+    "No 'must/shall/required' style obligation statements could be parsed from "
+    "this document. Check that it uses the expected '--- Policy Name (vX.X, Last "
+    "Reviewed: YYYY-MM-DD) ---' header and 'Section N.N: ...' body format."
+)
+
+class NoObligationsExtractedError(Exception):
+    """Raised when run_layer1 parses zero obligations from the input document."""
+    pass
+
 def run_analysis_pipeline(raw_text: str) -> dict:
     """Invokes the three-layer pipeline sequentially on raw text."""
     # Layer 1: Obligation Extraction
     layer1_records = run_layer1(raw_text)
+
+    total_obligations = sum(len(r.obligations) for r in layer1_records)
+    if total_obligations == 0:
+        raise NoObligationsExtractedError(NO_OBLIGATIONS_MESSAGE)
+
     layer1_dicts = [r.to_dict() for r in layer1_records]
     
     # Layer 2: Analysis (use loosened threshold)
@@ -65,6 +80,16 @@ async def analyze_file(request: Request, file: UploadFile = File(...)):
         
     try:
         report = run_analysis_pipeline(raw_text)
+    except NoObligationsExtractedError:
+        return templates.TemplateResponse(
+            request=request,
+            name="results.html",
+            context={
+                "report": None,
+                "report_json": None,
+                "no_obligations_extracted": True,
+            },
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Analysis pipeline failed: {str(e)}")
         
@@ -94,6 +119,11 @@ async def api_analyze_file(file: UploadFile = File(...)):
         
     try:
         report = run_analysis_pipeline(raw_text)
+    except NoObligationsExtractedError as e:
+        return JSONResponse(
+            status_code=422,
+            content={"error": "no_obligations_extracted", "detail": str(e)},
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Analysis pipeline failed: {str(e)}")
         

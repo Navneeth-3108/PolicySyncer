@@ -14,13 +14,16 @@ This codebase's *required* surface area matches Option C:
 | Group obligations by manually defined categories/keywords | `policy_layer1/category.py` (`CATEGORY_KEYWORDS`) |
 | Flag same-category, opposing-keyword obligations as conflicts | `policy_layer2/conflict.py` |
 | Staleness check against an 18-month threshold | `policy_layer2/staleness.py` (`_review_age_signal`) |
-| Policy health report | `policy_layer3` (`health_score.py`, `prose.py`) -- emitted as **JSON**, not HTML/PDF or a dashboard (see below) |
+| Policy health report | `policy_layer3` (`health_score.py`, `prose.py`) -- emitted as JSON, and rendered as an HTML dashboard / PDF report by `app/` (see below) |
 
-No web app was built and none should be added per the task instructions --
-input is a text/markdown document (or, via `dataset_integration/`, the
-sample dataset), output is JSON written to disk by `run_pipeline.py` /
-`run_dataset_evaluation.py`. There is no Flask/FastAPI server, no HTML/PDF
-report generator, and no dashboard anywhere in this repo.
+The `app/` folder (FastAPI + Jinja2 dashboard + fpdf2 PDF export) fulfills the
+web-app/dashboard/report requirements: `app/main.py` exposes `/analyze` and
+`/api/analyze` routes that run the three-layer pipeline and render the
+findings, recommendations, and health scores via `app/templates/` as an HTML
+dashboard, and `app/pdf_generator.py` exports the same report as a
+downloadable PDF via `/export-pdf`. `run_pipeline.py` /
+`run_dataset_evaluation.py` remain available as a JSON-only, no-server path
+for batch/dataset use.
 
 ## Where the implementation exceeds Option C
 
@@ -63,9 +66,11 @@ also asks to weigh:
    contradiction heuristic in `nli.py`; no `spacy` -> the regex slot
    extractor in `slots.py`. The mandatory dependency set is exactly
    Option C's ("Python (Flask/FastAPI), regex, HTML/CSS, basic NLP
-   concepts" minus the never-built web UI) plus `pytest` for the test
+   concepts") plus `pytest` for the test
    suite -- `python run_pipeline.py` and `python run_dataset_evaluation.py`
-   both run correctly with nothing but the standard library installed.
+   both run correctly with nothing but the standard library installed;
+   `app/` (its own `requirements.txt`) provides the Flask/FastAPI-style web
+   UI referenced by Option C.
 
 In short: the mandatory Option C feature set is fully implemented and is
 what runs by default; the additional signals are optional accuracy

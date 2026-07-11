@@ -36,6 +36,13 @@ else
 fi
 echo ""
 
+# Install Web UI / API Server dependencies
+echo -e "${BLUE}Installing Web UI & API Server dependencies...${NC}"
+cd ../app
+pip install -r requirements.txt
+echo -e "${GREEN}✓ Web UI & API Server dependencies installed${NC}"
+echo ""
+
 # Optional: Install advanced NLP models
 echo ""
 echo -e "${BLUE}Optional: Installing advanced NLP models for better performance...${NC}"

@@ -103,10 +103,28 @@ def parse_policy_md(md_text: str, source_file: str) -> Dict[str, Any]:
 
 
 def _native_block(parsed: Dict[str, Any]) -> str:
-    """Render one parsed policy dict as a native policy_layer1 block."""
-    version = parsed["version"] or "1.0"
-    last_reviewed = parsed["last_reviewed"] or "1970-01-01"
-    header = f"--- {parsed['title']} (v{version}, Last Reviewed: {last_reviewed}) ---"
+    """Render one parsed policy dict as a native policy_layer1 block.
+
+    Never fabricates a version or last-reviewed date: if either is missing
+    from the source, it's simply omitted from the header. policy_layer1's
+    tolerant fallback header parser then sets metadata_incomplete /
+    staleness_undetermined flags for the missing piece rather than the
+    pipeline ever seeing a fake "v1.0" or "1970-01-01".
+    """
+    version = parsed["version"]
+    last_reviewed = parsed["last_reviewed"]
+
+    meta_parts = []
+    if version:
+        meta_parts.append(f"v{version}")
+    if last_reviewed:
+        meta_parts.append(f"Last Reviewed: {last_reviewed}")
+
+    if meta_parts:
+        header = f"--- {parsed['title']} ({', '.join(meta_parts)}) ---"
+    else:
+        header = f"--- {parsed['title']} ---"
+
     body = " ".join(parsed["bullets"])
     section = f"Section 1.1: {body}"
     return f"{header}\n{section}"

@@ -41,7 +41,17 @@ python run_pipeline.py path/to/your/policy.txt
 
 A minimal, high-aesthetic web interface and API is available around the policy analysis pipeline.
 
-### 1. Run the Web Server
+### 1. Install Web App Dependencies
+
+The web app has its own dependencies (FastAPI, Uvicorn, Jinja2, python-multipart, fpdf2), listed in `app/requirements.txt`:
+
+```bash
+pip install -r app/requirements.txt
+```
+
+This is also handled automatically by `install_dependencies.sh`.
+
+### 2. Run the Web Server
 
 Start the Uvicorn server from the root directory:
 
@@ -51,7 +61,7 @@ Start the Uvicorn server from the root directory:
 
 Then open [http://localhost:8000](http://localhost:8000) in your web browser.
 
-### 2. API Endpoints
+### 3. API Endpoints
 
 - **`GET /`**: Renders the web-based file-upload dashboard.
 - **`POST /analyze`**: Accepts a policy document upload (form data) and returns the rendered HTML dashboard containing findings, recommendations, and health scores.

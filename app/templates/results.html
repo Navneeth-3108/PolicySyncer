@@ -283,9 +283,9 @@
         }
 
         .finding-badge.low {
-            background: rgba(59, 130, 246, 0.1);
-            color: var(--color-info);
-            border: 1px solid rgba(59, 130, 246, 0.2);
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--color-good);
+            border: 1px solid rgba(16, 185, 129, 0.2);
         }
 
         .finding-type {
@@ -369,6 +369,34 @@
             color: var(--color-good);
             display: block;
         }
+
+        .parse-error {
+            background: var(--card-bg);
+            border: 1px solid var(--color-warning);
+            border-radius: 16px;
+            padding: 3rem;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .parse-error-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--color-warning);
+            display: block;
+        }
+
+        .parse-error-format-example {
+            text-align: left;
+            background: var(--bg-secondary, rgba(0,0,0,0.03));
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1.25rem;
+            font-family: monospace;
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+        }
     </style>
 </head>
 <body>
@@ -376,17 +404,36 @@
         <header>
             <div class="header-title">
                 <h1>Analysis Results</h1>
+                {% if no_obligations_extracted %}
+                <p>Policy Scan could not be completed</p>
+                {% else %}
                 <p>Policy Scan completed successfully</p>
+                {% endif %}
             </div>
             <div class="action-buttons">
                 <a href="/" class="btn btn-outline" id="uploadAnotherBtn">← Analyze Another</a>
+                {% if not no_obligations_extracted %}
                 <form action="/export-pdf" method="post" target="_blank" style="margin: 0; padding: 0;">
                     <textarea name="report_json" style="display:none;">{{ report_json }}</textarea>
                     <button type="submit" class="btn btn-primary" id="exportPdfBtn">Export PDF Report</button>
                 </form>
+                {% endif %}
             </div>
         </header>
 
+        {% if no_obligations_extracted %}
+        <div class="parse-error">
+            <span class="parse-error-icon">⚠</span>
+            <h3>Couldn't Parse This Document</h3>
+            <p style="margin-top: 0.5rem; font-weight: 300;">
+                No "must/shall/required" style obligation statements could be parsed from this document.
+                Check that it uses the expected "--- Policy Name (vX.X, Last Reviewed: YYYY-MM-DD) ---"
+                header and "Section N.N: ..." body format.
+            </p>
+            <div class="parse-error-format-example">--- Password Policy (v2.1, Last Reviewed: 2021-08-15) ---
+Section 3.1: All employees must rotate their passwords every 90 days.</div>
+        </div>
+        {% else %}
         <div class="dashboard-grid">
             <!-- Sidebar: Health Score -->
             <aside class="score-card">
@@ -456,7 +503,7 @@
                                     <span class="finding-badge {{ badge_class }}">{{ severity }}</span>
                                     <span class="finding-type">{{ finding.finding_type }}</span>
                                 </div>
-                                <div class="finding-policy">{{ finding.policy }}</div>
+                                <div class="finding-policy">{{ finding.policy or (finding.policy_a ~ ' / ' ~ finding.policy_b if finding.policy_a else '') }}</div>
                             </div>
                             <div class="finding-body">
                                 {{ finding.description }}
@@ -482,6 +529,7 @@
                 {% endif %}
             </main>
         </div>
+        {% endif %}
     </div>
 </body>
 </html>

@@ -186,6 +186,30 @@
             font-size: 0.875rem;
             font-weight: 300;
         }
+
+        .format-hint {
+            margin-top: 1.25rem;
+            text-align: left;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .format-hint summary {
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        .format-hint pre {
+            margin-top: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 0.8rem;
+        }
     </style>
 </head>
 <body>
@@ -205,6 +229,21 @@
                 <div class="file-selected-info" id="fileInfo">
                     <span>✓</span> <span id="fileName">No file selected</span>
                 </div>
+
+                <details class="format-hint">
+                    <summary>Expected document format</summary>
+                    <p>Documents must use policy headers and numbered sections so obligations can be parsed:</p>
+                    <pre>--- Password Policy (v2.1, Last Reviewed: 2021-08-15) ---
+Section 3.1: All employees must rotate their passwords every 90 days.
+Section 3.2: Passwords must be at least 12 characters with uppercase,
+lowercase, numbers, and special characters.
+Section 3.3: Previous 10 passwords may not be reused.
+
+--- Cloud Security Policy (v1.4, Last Reviewed: 2023-02-10) ---
+Section 5.1: All cloud-hosted systems must implement MFA for user accounts.
+Section 5.2: Password rotation shall not be required for cloud systems; MFA replaces the need for periodic credential changes.
+Section 5.3: Service accounts must rotate credentials every 365 days.</pre>
+                </details>
                 
                 <button type="submit" class="submit-btn" id="submitBtn" disabled style="margin-top: 1.5rem;">Analyze Document</button>
             </form>
