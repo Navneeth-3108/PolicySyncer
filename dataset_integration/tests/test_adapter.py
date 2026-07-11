@@ -83,3 +83,38 @@ def test_file_to_name_map_is_inverse():
     name_to_file = {"Password Policy": "policy_01.md", "Cloud Policy": "policy_02.md"}
     inverse = file_to_name_map(name_to_file)
     assert inverse == {"policy_01.md": "Password Policy", "policy_02.md": "Cloud Policy"}
+
+
+def test_native_block_omits_missing_metadata_instead_of_fabricating():
+    """Regression test for the "never fabricate data" fix: a dataset file
+    with genuinely missing version/last_reviewed metadata must NOT produce
+    a fabricated "v1.0" / "1970-01-01" native block. Instead, run_layer1
+    should see them as absent and set metadata_incomplete /
+    staleness_undetermined via its own tolerant fallback header parser."""
+    import tempfile
+
+    no_metadata_md = "# No Metadata Policy\n\n- All users must encrypt data.\n"
+
+    with tempfile.TemporaryDirectory() as tmp:
+        policies_dir = os.path.join(tmp, "policies")
+        os.makedirs(policies_dir)
+        with open(os.path.join(policies_dir, "policy_01.md"), "w") as f:
+            f.write(no_metadata_md)
+
+        text, name_to_file = build_dataset_document(tmp)
+
+        # No fabricated defaults anywhere in the rendered native document.
+        assert "1970-01-01" not in text
+        assert "v1.0" not in text
+        assert text.strip().startswith("--- No Metadata Policy ---")
+
+        records = run_layer1(text)
+        assert len(records) == 1
+        record = records[0]
+        assert record.policy_metadata.policy_name == "No Metadata Policy"
+        assert record.policy_metadata.version is None
+        assert record.policy_metadata.last_reviewed is None
+        assert "metadata_incomplete" in record.policy_metadata.metadata_flags
+        assert "staleness_undetermined" in record.policy_metadata.metadata_flags
+        # The obligation itself should still extract normally.
+        assert len(record.obligations) == 1
