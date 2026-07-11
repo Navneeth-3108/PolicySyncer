@@ -46,10 +46,21 @@ class Config:
     })
 
     # ---- §7.1 maintained reference tables (external, curated; not learned) ----
+    # NOTE: "wep" was already covered below. The Problem-11 sample dataset's
+    # `(Reference: ...)` annotations also cite "SOX 2002", "GDPR 2016", and
+    # "FTP" -- added here even though SOX/GDPR are regulations, not
+    # technologies, because this field structurally functions as a flat
+    # "staleness indicator" list (§7.1's "references to deprecated
+    # technologies OR superseded regulations/standards" collapses both into
+    # one signal in this implementation). Treat the regulation entries as a
+    # placeholder: a real deployment should confirm year-stamped regulation
+    # citations like "GDPR 2016" or "SOX 2002" actually indicate an outdated
+    # citation (regulations are sometimes correctly cited by enactment year)
+    # before flagging them the same way as a retired cipher or OS version.
     deprecated_technologies: List[str] = field(default_factory=lambda: [
         "tls 1.0", "tls 1.1", "sha-1", "sha1", "md5", "des", "3des",
         "windows server 2012", "windows server 2008", "ssl 3.0", "ssl 2.0",
-        "rc4", "wep",
+        "rc4", "wep", "ftp", "sox 2002", "gdpr 2016",
     ])
     superseded_standards: Dict[str, str] = field(default_factory=lambda: {
         # cited-standard token (lowercased substring match) -> note
@@ -88,6 +99,19 @@ class Config:
         "encryption": ["ISO 27001 A.8.24", "NIST SC-13"],
         "retention": ["GDPR Art. 5(1)(e)"],
         "network_security": ["ISO 27001 A.8.20"],
+        # ---- Problem-11 dataset-driven categories (see category.py) ----
+        "api_security": ["ISO 27001 A.8.26"],
+        "asset_management": ["ISO 27001 A.5.9"],
+        "backup_recovery": ["ISO 27001 A.8.13"],
+        "change_management": ["ISO 27001 A.8.32"],
+        "cloud_security": ["ISO 27001 A.5.23"],
+        "vendor_management": ["ISO 27001 A.5.19"],
+        "logging_monitoring": ["ISO 27001 A.8.15", "NIST AU-2"],
+        "mobile_device_management": ["ISO 27001 A.8.1"],
+        "patch_management": ["ISO 27001 A.8.8"],
+        "physical_security": ["ISO 27001 A.7.1"],
+        "data_privacy": ["GDPR Art. 5"],
+        "personnel_security": ["ISO 27001 A.6.1"],
         "other": [],
     })
 

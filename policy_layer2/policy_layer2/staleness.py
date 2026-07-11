@@ -7,6 +7,7 @@ version history/ownership) into a weighted staleness verdict rather than a
 single 18-month date check (§7.1, §7.2).
 """
 
+import re
 from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Any, Dict, List, Optional
@@ -22,6 +23,28 @@ class StalenessSignal:
     weight: float
     confidence: float
     evidence: str
+
+
+# §7.1 reference-table lookups must match whole terms, not substrings --
+# a naive `term in text` check (the previous implementation) lets "ftp"
+# match inside "sftp", "des" match inside "designed"/"credentials", etc.
+# \b works here because every term in the reference tables is
+# alphanumeric-plus-punctuation (dots, dashes, spaces); re.escape keeps
+# any regex-special characters (e.g. the "." in "ssl 3.0") literal.
+_TERM_CACHE: Dict[str, "re.Pattern[str]"] = {}
+
+
+def _term_pattern(term: str) -> "re.Pattern[str]":
+    pattern = _TERM_CACHE.get(term)
+    if pattern is None:
+        pattern = re.compile(r"\b" + re.escape(term) + r"\b", re.IGNORECASE)
+        _TERM_CACHE[term] = pattern
+    return pattern
+
+
+def term_in_text(term: str, text: str) -> bool:
+    """Whole-word/whole-phrase match of `term` inside `text` (§7.1)."""
+    return bool(_term_pattern(term).search(text))
 
 
 def _months_since(last_reviewed: Optional[str], today: Optional[date] = None) -> Optional[float]:
@@ -54,7 +77,7 @@ def _deprecated_tech_signal(obligations: List[DeonticProposition], config) -> St
     for ob in obligations:
         text = ob.raw_text.lower()
         for term in config.deprecated_technologies:
-            if term in text:
+            if term_in_text(term, text):
                 hits.append((ob.obligation_id, term))
     fired = bool(hits)
     conf = min(1.0, 0.6 + 0.1 * len(hits)) if fired else 0.0
@@ -67,7 +90,7 @@ def _superseded_standard_signal(obligations: List[DeonticProposition], config) -
     for ob in obligations:
         text = ob.raw_text.lower()
         for cited, note in config.superseded_standards.items():
-            if cited in text:
+            if term_in_text(cited, text):
                 hits.append((ob.obligation_id, cited, note))
     fired = bool(hits)
     conf = 0.85 if fired else 0.0

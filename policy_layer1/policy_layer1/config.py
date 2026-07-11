@@ -19,6 +19,21 @@ DEFAULT_CATEGORY_PRIORITY: List[str] = [
     "access_control",
     "account_management",
     "network_security",
+    # ---- Problem-11 dataset-driven categories (category.py) -- placed
+    # after the original spec categories so none of the pre-existing
+    # priority ordering (and the tests that depend on it) changes.
+    "api_security",
+    "asset_management",
+    "backup_recovery",
+    "change_management",
+    "cloud_security",
+    "vendor_management",
+    "logging_monitoring",
+    "mobile_device_management",
+    "patch_management",
+    "physical_security",
+    "data_privacy",
+    "personnel_security",
     "other",
 ]
 

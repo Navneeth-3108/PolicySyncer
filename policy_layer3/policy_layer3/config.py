@@ -63,5 +63,19 @@ class Layer3Config:
         "encryption": ["ISO 27001 A.8.24", "NIST SC-13"],
         "retention": ["GDPR Art. 5(1)(e)"],
         "network_security": ["ISO 27001 A.8.20"],
+        # ---- Problem-11 dataset-driven categories (see policy_layer1's
+        # category.py); kept identical to policy_layer2/config.py's table.
+        "api_security": ["ISO 27001 A.8.26"],
+        "asset_management": ["ISO 27001 A.5.9"],
+        "backup_recovery": ["ISO 27001 A.8.13"],
+        "change_management": ["ISO 27001 A.8.32"],
+        "cloud_security": ["ISO 27001 A.5.23"],
+        "vendor_management": ["ISO 27001 A.5.19"],
+        "logging_monitoring": ["ISO 27001 A.8.15", "NIST AU-2"],
+        "mobile_device_management": ["ISO 27001 A.8.1"],
+        "patch_management": ["ISO 27001 A.8.8"],
+        "physical_security": ["ISO 27001 A.7.1"],
+        "data_privacy": ["GDPR Art. 5"],
+        "personnel_security": ["ISO 27001 A.6.1"],
         "other": [],
     })

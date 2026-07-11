@@ -29,12 +29,36 @@ CATEGORY_KEYWORDS = {
     ],
     "account_management": [
         "api key", "service account", "service accounts", "account provisioning",
-        "deprovisioning", "user accounts", "accounts",
+        "deprovisioning", "user accounts", "accounts", "provisioning",
     ],
     "network_security": [
-        "vpn", "firewall", "network segmentation", "perimeter",
+        "vpn", "firewall", "network segmentation", "perimeter", "network",
     ],
+    # ---- Problem-11 dataset topic vocabulary (bare, single-word topic
+    # tokens from the generated sample policies, e.g. "All users must
+    # <topic> as per company standards." / "<Topic> is prohibited for all
+    # users."). Each of these is its own category rather than folded into
+    # an existing one, since the dataset topics don't semantically overlap
+    # with password/auth/encryption/retention/access/account/network.
+    "api_security": ["api"],
+    "asset_management": ["asset", "endpoint"],
+    "backup_recovery": ["backup"],
+    "change_management": ["change"],
+    "cloud_security": ["cloud"],
+    "vendor_management": ["vendor", "third-party"],
+    "logging_monitoring": ["logging", "monitoring"],
+    "mobile_device_management": ["mobile"],
+    "patch_management": ["patch"],
+    "physical_security": ["physical"],
+    "data_privacy": ["privacy"],
+    "personnel_security": ["hr"],
 }
+# NOTE: "change" as a bare keyword is intentionally broad -- it will also
+# match unrelated sentences like "password change" or "change window".
+# Category priority (config.py DEFAULT_CATEGORY_PRIORITY) resolves the
+# overlap deterministically (password_management is checked first), but a
+# curated multi-word phrase list would reduce false positives further if
+# this table is extended for production use beyond this sample dataset.
 
 _COMPILED = {
     cat: [re.compile(r"\b" + re.escape(kw) + r"\b", re.IGNORECASE) for kw in kws]

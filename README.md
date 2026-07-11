@@ -148,7 +148,25 @@ Or test without pytest:
 cd policy_layer1 && python tests/_run_without_pytest.py
 cd ../policy_layer2 && python tests/_run_without_pytest.py
 cd ../policy_layer3 && python tests/_run_without_pytest.py
+cd ../dataset_integration/tests && python _run_without_pytest.py
 ```
+
+## Dataset Evaluation (Problem-11 sample dataset)
+
+`dataset_integration/` adapts the Problem-11 sample dataset (30 markdown
+policy files + `findings_labels.csv` ground truth) into the pipeline's
+native input format and scores the pipeline's output against it:
+
+```bash
+python run_dataset_evaluation.py path/to/dataset/problem_11
+python run_dataset_evaluation.py path/to/dataset/problem_11 --json
+```
+
+Reports obligation-extraction accuracy plus conflict/redundancy/staleness
+detection recall and a false-positive rate on the dataset's
+scope-differentiated "apparent conflict" pairs. See
+`dataset_integration/evaluate.py` for exactly how each metric is derived
+from `findings_labels`, and `CHANGELOG.md` for the current numbers.
 
 ## Design Principles
 
@@ -156,6 +174,10 @@ cd ../policy_layer3 && python tests/_run_without_pytest.py
 - **Formal specification adherence**: Explicitly traced to design documents
 - **Deterministic & auditable**: No LLM calls; fully traceable reasoning
 - **Safety-first**: Won't fabricate data or make unfounded assumptions
+
+See [SCOPE.md](SCOPE.md) for how this implementation maps to the project
+brief's "Option C: Simple Policy Scanner" requirements, and which parts of
+the pipeline intentionally go beyond them.
 
 ## License & Documentation
 

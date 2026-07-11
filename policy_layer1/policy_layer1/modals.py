@@ -29,6 +29,10 @@ _MODAL_LEXICON = [
     (r"\bshall\s+not\b", "PROHIBITION", 3, "NEGATIVE"),
     (r"\bmay\s+not\b", "PROHIBITION", 3, "NEGATIVE"),
     (r"\bis\s+prohibited\s+from\b", "PROHIBITION", 3, "NEGATIVE"),
+    # Bare "is prohibited" (no trailing "from ...") -- covers constructions
+    # like "Access is prohibited for all users." The "from" form above is
+    # listed first so it still wins on tie-break when both would match.
+    (r"\bis\s+prohibited\b", "PROHIBITION", 3, "NEGATIVE"),
     (r"\bis\s+not\s+(?:permitted|allowed)\s+to\b", "PROHIBITION", 3, "NEGATIVE"),
     (r"\bshould\s+not\b", "PROHIBITION", 2, "NEGATIVE"),
     (r"\bis\s+discouraged\s+from\b", "PROHIBITION", 2, "NEGATIVE"),
@@ -37,9 +41,18 @@ _MODAL_LEXICON = [
     (r"\bis\s+required\s+to\b", "OBLIGATION", 3, "POSITIVE"),
     (r"\bis\s+mandatory\b", "OBLIGATION", 3, "POSITIVE"),
     (r"\bis\s+to\s+be\b", "OBLIGATION", 3, "POSITIVE"),
+    # Bare adjectival "required" (no "is ... to"), e.g. "Users required
+    # change as per company standards." Guarded by a negative lookbehind so
+    # it does not double-fire on passive constructions already covered by a
+    # preceding modal, e.g. "shall not be required" -- there "required" is
+    # part of the negated obligation, not a second, independent modal cue.
+    (r"(?<!\bbe\s)\brequired\b", "OBLIGATION", 3, "POSITIVE"),
     (r"\bshould\b", "RECOMMENDATION", 2, "POSITIVE"),
     (r"\bis\s+advised\s+to\b", "RECOMMENDATION", 2, "POSITIVE"),
     (r"\bis\s+recommended\s+(?:that|to)\b", "RECOMMENDATION", 2, "POSITIVE"),
+    # Bare adjectival "recommended" (no "is ... that/to"), same passive
+    # double-fire guard as "required" above.
+    (r"(?<!\bbe\s)\brecommended\b", "RECOMMENDATION", 2, "POSITIVE"),
     (r"\bis\s+encouraged\s+to\b", "RECOMMENDATION", 1, "POSITIVE"),
     (r"\bmay\s+optionally\b", "RECOMMENDATION", 1, "POSITIVE"),
     # "may" not followed by "not" within 3 tokens
