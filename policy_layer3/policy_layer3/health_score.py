@@ -1,0 +1,42 @@
+"""
+§6 policy_health_score -- deterministic weighted rollup. Arithmetic only;
+never delegated to an LLM call.
+"""
+
+from typing import Any, Dict, List
+
+from .citations import CitationIndex
+
+
+def compute_health_scores(
+    findings: List[Any],
+    staleness: List[Any],
+    citation_index: CitationIndex,
+    config,
+) -> Dict[str, int]:
+    weight = config.severity_weight
+    penalty: Dict[str, float] = {info.slug: 0.0 for info in citation_index.policies.values()}
+
+    for finding in findings:
+        w = weight.get(finding.severity, 0.0)
+        policy_names = {
+            citation_index.obligations[ref].policy_name
+            for ref in finding.obligation_refs
+            if ref in citation_index.obligations
+        }
+        if config.two_sided_penalty_mode == "half" and len(policy_names) > 1:
+            w = w / len(policy_names)
+        for name in policy_names:
+            slug = citation_index.slug_for(name)
+            penalty[slug] = penalty.get(slug, 0.0) + w
+
+    for record in staleness:
+        slug = citation_index.slug_for(record.policy_name)
+        penalty[slug] = penalty.get(slug, 0.0) + weight.get(record.severity, 0.0)
+
+    scores: Dict[str, int] = {
+        slug: max(0, round(100 - p)) for slug, p in penalty.items()
+    }
+    overall = round(sum(scores.values()) / len(scores)) if scores else 100
+    scores["overall"] = overall
+    return scores

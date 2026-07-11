@@ -1,0 +1,10 @@
+--- Password Policy (v2.1, Last Reviewed: 2021-08-15) ---
+Section 3.1: All employees must rotate their passwords every 90 days.
+Section 3.2: Passwords must be at least 12 characters with uppercase,
+lowercase, numbers, and special characters.
+Section 3.3: Previous 10 passwords may not be reused.
+
+--- Cloud Security Policy (v1.4, Last Reviewed: 2023-02-10) ---
+Section 5.1: All cloud-hosted systems must implement MFA for user accounts.
+Section 5.2: Password rotation shall not be required for cloud systems; MFA replaces the need for periodic credential changes.
+Section 5.3: Service accounts must rotate credentials every 365 days.

@@ -1,0 +1,10 @@
+# Core pipeline has NO hard third-party dependencies (pure regex, stdlib only).
+
+# Optional (§5.5 hybrid extractor): install these two if you want spaCy-based
+# actor/action/object extraction instead of the regex fallback. If absent,
+# the pipeline automatically and silently uses the regex extractor.
+# spacy>=3.7
+# https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1-py3-none-any.whl
+
+# Dev / testing
+pytest>=7.0

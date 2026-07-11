@@ -1,0 +1,182 @@
+[
+  {
+    "policy_metadata": {
+      "policy_name": "Password Policy",
+      "version": "2.1",
+      "last_reviewed": "2025-01-15"
+    },
+    "obligations": [
+      {
+        "obligation_id": "PWD-001",
+        "raw_text": "Passwords must be rotated every 90 days for all employees.",
+        "modal_normalized": "must",
+        "polarity": "positive",
+        "modal_strength": 3,
+        "action": "rotate",
+        "object": "passwords",
+        "qualifiers": ["every 90 days"],
+        "category_primary": "access_control",
+        "category_secondary": [],
+        "scope": {"role": "all employees", "system": null, "geography": null},
+        "temporal_constraint": {"type": "recurring", "value": 90, "unit": "days", "value_days": 90},
+        "exception": {},
+        "confidence": 0.88,
+        "confidence_tier": "HIGH",
+        "metadata_incomplete": false
+      }
+    ]
+  },
+  {
+    "policy_metadata": {
+      "policy_name": "Cloud Systems Policy",
+      "version": "1.4",
+      "last_reviewed": "2024-11-01"
+    },
+    "obligations": [
+      {
+        "obligation_id": "CLOUD-014",
+        "raw_text": "Credential refresh cycles shall be enforced annually for cloud-hosted systems.",
+        "modal_normalized": "must",
+        "polarity": "positive",
+        "modal_strength": 3,
+        "action": "refresh",
+        "object": "credentials",
+        "qualifiers": ["annually"],
+        "category_primary": "access_control",
+        "category_secondary": [],
+        "scope": {"role": null, "system": "cloud", "geography": null},
+        "temporal_constraint": {"type": "recurring", "value": 365, "unit": "days", "value_days": 365},
+        "exception": {},
+        "confidence": 0.81,
+        "confidence_tier": "HIGH",
+        "metadata_incomplete": false
+      }
+    ]
+  },
+  {
+    "policy_metadata": {
+      "policy_name": "Network Access Policy",
+      "version": "3.0",
+      "last_reviewed": "2025-06-01"
+    },
+    "obligations": [
+      {
+        "obligation_id": "NET-005",
+        "raw_text": "All employees must use VPN when accessing internal systems remotely.",
+        "modal_normalized": "must",
+        "polarity": "positive",
+        "modal_strength": 3,
+        "action": "use",
+        "object": "VPN",
+        "qualifiers": ["when accessing internal systems remotely"],
+        "category_primary": "network_security",
+        "category_secondary": [],
+        "scope": {"role": "all employees", "system": null, "geography": null},
+        "temporal_constraint": null,
+        "exception": {"scope_override": {"role": null, "system": "CI/CD", "geography": null}},
+        "confidence": 0.79,
+        "confidence_tier": "HIGH",
+        "metadata_incomplete": false
+      },
+      {
+        "obligation_id": "NET-006",
+        "raw_text": "CI/CD pipelines are permitted to bypass VPN for automated deployments.",
+        "modal_normalized": "may",
+        "polarity": "positive",
+        "modal_strength": 1,
+        "action": "bypass",
+        "object": "VPN",
+        "qualifiers": ["for automated deployments"],
+        "category_primary": "network_security",
+        "category_secondary": [],
+        "scope": {"role": null, "system": "CI/CD", "geography": null},
+        "temporal_constraint": null,
+        "exception": {},
+        "confidence": 0.74,
+        "confidence_tier": "MEDIUM",
+        "metadata_incomplete": false
+      }
+    ]
+  },
+  {
+    "policy_metadata": {
+      "policy_name": "Data Retention Policy",
+      "version": "1.0",
+      "last_reviewed": "2023-03-01"
+    },
+    "obligations": [
+      {
+        "obligation_id": "RET-002",
+        "raw_text": "Customer records must be retained for 7 years from creation.",
+        "modal_normalized": "must",
+        "polarity": "positive",
+        "modal_strength": 3,
+        "action": "retain",
+        "object": "customer records",
+        "qualifiers": ["7 years from creation"],
+        "category_primary": "data_retention",
+        "category_secondary": ["data_protection"],
+        "scope": {"role": null, "system": null, "geography": null},
+        "temporal_constraint": {"type": "duration", "value": 7, "unit": "years", "value_days": 2555},
+        "exception": {},
+        "confidence": 0.83,
+        "confidence_tier": "HIGH",
+        "metadata_incomplete": false
+      }
+    ]
+  },
+  {
+    "policy_metadata": {
+      "policy_name": "GDPR Compliance Policy",
+      "version": "2.0",
+      "last_reviewed": "2025-09-10"
+    },
+    "obligations": [
+      {
+        "obligation_id": "GDPR-011",
+        "raw_text": "Customer records must be deleted upon a valid data subject deletion request.",
+        "modal_normalized": "must",
+        "polarity": "positive",
+        "modal_strength": 3,
+        "action": "delete",
+        "object": "customer records",
+        "qualifiers": ["upon a valid data subject deletion request"],
+        "category_primary": "data_retention",
+        "category_secondary": ["data_protection"],
+        "scope": {"role": null, "system": null, "geography": null},
+        "temporal_constraint": {"type": "deadline", "value": null, "unit": null, "value_days": null, "trigger": "deletion request"},
+        "exception": {},
+        "confidence": 0.86,
+        "confidence_tier": "HIGH",
+        "metadata_incomplete": false
+      }
+    ]
+  },
+  {
+    "policy_metadata": {
+      "policy_name": "Legacy Encryption Standard",
+      "version": "1.2",
+      "last_reviewed": "2022-02-01"
+    },
+    "obligations": [
+      {
+        "obligation_id": "ENC-003",
+        "raw_text": "All external connections must use TLS 1.0 or higher for encryption in transit.",
+        "modal_normalized": "must",
+        "polarity": "positive",
+        "modal_strength": 3,
+        "action": "use",
+        "object": "TLS 1.0 or higher",
+        "qualifiers": ["for encryption in transit"],
+        "category_primary": "encryption",
+        "category_secondary": [],
+        "scope": {"role": null, "system": null, "geography": null},
+        "temporal_constraint": null,
+        "exception": {},
+        "confidence": 0.77,
+        "confidence_tier": "MEDIUM",
+        "metadata_incomplete": false
+      }
+    ]
+  }
+]

@@ -1,0 +1,8 @@
+# Core Layer 2 pipeline has ZERO hard third-party dependencies (pure stdlib
+# TF-IDF cosine + heuristic contradiction scoring fallbacks). Install pytest
+# to run the test suite:
+pytest
+
+# Optional upgrades (auto-detected at runtime, nothing breaks if absent):
+#   pip install sentence-transformers   # real SBERT embeddings (similarity.py)
+#   pip install transformers torch      # real NLI contradiction model (nli.py)
