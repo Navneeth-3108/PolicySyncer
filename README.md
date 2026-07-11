@@ -37,6 +37,27 @@ python run_pipeline.py path/to/your/policy.txt
 - `layer2_output.json` - Detected conflicts, redundancies, and staleness signals
 - `final_report.json` - Final report with recommendations and policy health score
 
+## Web UI & API Server
+
+A minimal, high-aesthetic web interface and API is available around the policy analysis pipeline.
+
+### 1. Run the Web Server
+
+Start the Uvicorn server from the root directory:
+
+```bash
+.venv/bin/uvicorn app.main:app --reload
+```
+
+Then open [http://localhost:8000](http://localhost:8000) in your web browser.
+
+### 2. API Endpoints
+
+- **`GET /`**: Renders the web-based file-upload dashboard.
+- **`POST /analyze`**: Accepts a policy document upload (form data) and returns the rendered HTML dashboard containing findings, recommendations, and health scores.
+- **`POST /api/analyze`**: Accepts a policy document upload (form data) and returns the analysis report directly in JSON format.
+- **`POST /export-pdf`**: Accepts a stringified JSON report and returns a downloadable, formatted PDF report.
+
 ## Project Structure
 
 ```

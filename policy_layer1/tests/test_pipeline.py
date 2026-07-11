@@ -43,7 +43,8 @@ def test_comma_qualifier_list_is_one_record():
         "Passwords must be at least 12 characters with uppercase, lowercase, "
         "numbers, and special characters."
     )
-    records = run_layer1(_doc(text))
+    cfg = Config(use_spacy_if_available=False)
+    records = run_layer1(_doc(text), config=cfg)
     obligations = records[0].obligations
     assert len(obligations) == 1
     assert len(obligations[0].qualifiers) == 3

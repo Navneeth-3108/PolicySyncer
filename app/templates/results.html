@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Detailed analysis results for policy conflict and staleness detector.">
+    <title>Analysis Results - Policy Detector</title>
+    <!-- Modern Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: rgba(17, 24, 39, 0.6);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --accent-primary: #6366f1;
+            --accent-secondary: #a855f7;
+            --text-main: #f3f4f6;
+            --text-secondary: #9ca3af;
+            
+            /* Status Colors */
+            --color-good: #10b981;
+            --color-warning: #f59e0b;
+            --color-danger: #ef4444;
+            --color-info: #3b82f6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(168, 85, 247, 0.1) 0%, transparent 40%);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 3rem 2rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+        }
+
+        .header-title h1 {
+            font-size: 2.25rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #e0e7ff, #f3e8ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.025em;
+            margin-bottom: 0.25rem;
+        }
+
+        .header-title p {
+            color: var(--text-secondary);
+            font-weight: 300;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            padding: 0.625rem 1.25rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text-main);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+        }
+
+        .btn-primary:hover {
+            opacity: 0.95;
+            box-shadow: 0 6px 18px rgba(99, 102, 241, 0.35);
+            transform: translateY(-1px);
+        }
+
+        /* Dashboard Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        @media (min-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 320px 1fr;
+            }
+        }
+
+        /* Sidebar: Health Score Card */
+        .score-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 2rem;
+            height: fit-content;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .score-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            color: #f3f4f6;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 0.75rem;
+        }
+
+        .overall-score-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .radial-progress {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            position: relative;
+            background: radial-gradient(closest-side, var(--bg-color) 79%, transparent 80% 100%),
+                        conic-gradient(var(--score-color, var(--color-good)) var(--score-percent, 0%), rgba(255, 255, 255, 0.05) 0);
+        }
+
+        .radial-progress-inner {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .score-status-badge {
+            font-size: 0.85rem;
+            font-weight: 700;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            text-transform: uppercase;
+        }
+
+        .score-status-badge.good {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--color-good);
+        }
+
+        .score-status-badge.warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--color-warning);
+        }
+
+        .score-status-badge.danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--color-danger);
+        }
+
+        .individual-scores {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .ind-score-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.95rem;
+        }
+
+        .ind-score-name {
+            color: var(--text-secondary);
+            text-transform: capitalize;
+        }
+
+        .ind-score-val {
+            font-weight: 600;
+        }
+
+        /* Main Content: Findings */
+        .findings-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .findings-section h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .finding-card {
+            background: var(--card-bg);
+            border-left: 4px solid var(--accent-color, var(--color-info));
+            border-radius: 0 16px 16px 0;
+            padding: 1.5rem;
+            position: relative;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            border-top: 1px solid var(--card-border);
+            border-right: 1px solid var(--card-border);
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .finding-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .finding-title-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .finding-badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.25rem 0.625rem;
+            border-radius: 6px;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .finding-badge.high {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--color-danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .finding-badge.medium {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--color-warning);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .finding-badge.low {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--color-info);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .finding-type {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .finding-policy {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-style: italic;
+        }
+
+        .finding-body {
+            font-size: 0.975rem;
+            line-height: 1.6;
+            margin-bottom: 1.25rem;
+        }
+
+        .finding-remediation {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .finding-remediation-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--accent-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-remediation-text {
+            font-size: 0.925rem;
+            color: #d1d5db;
+        }
+
+        .compliance-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .compliance-lbl {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .compliance-tag {
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: rgba(99, 102, 241, 0.08);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            color: #c7d2fe;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .no-findings {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 3rem;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .no-findings-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--color-good);
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-title">
+                <h1>Analysis Results</h1>
+                <p>Policy Scan completed successfully</p>
+            </div>
+            <div class="action-buttons">
+                <a href="/" class="btn btn-outline" id="uploadAnotherBtn">← Analyze Another</a>
+                <form action="/export-pdf" method="post" target="_blank" style="margin: 0; padding: 0;">
+                    <textarea name="report_json" style="display:none;">{{ report_json }}</textarea>
+                    <button type="submit" class="btn btn-primary" id="exportPdfBtn">Export PDF Report</button>
+                </form>
+            </div>
+        </header>
+
+        <div class="dashboard-grid">
+            <!-- Sidebar: Health Score -->
+            <aside class="score-card">
+                <h2>Policy Health</h2>
+                
+                {% set overall_score = report.policy_health_score.overall | default(100) %}
+                {% if overall_score >= 80 %}
+                    {% set score_color = "var(--color-good)" %}
+                    {% set status_class = "good" %}
+                    {% set status_lbl = "Good" %}
+                {% elif overall_score >= 50 %}
+                    {% set score_color = "var(--color-warning)" %}
+                    {% set status_class = "warning" %}
+                    {% set status_lbl = "Warning" %}
+                {% else %}
+                    {% set score_color = "var(--color-danger)" %}
+                    {% set status_class = "danger" %}
+                    {% set status_lbl = "Critical" %}
+                {% endif %}
+
+                <div class="overall-score-wrapper">
+                    <div class="radial-progress" style="--score-percent: {{ overall_score }}%; --score-color: {{ score_color }};">
+                        <div class="radial-progress-inner">{{ overall_score }}%</div>
+                    </div>
+                    <span class="score-status-badge {{ status_class }}">{{ status_lbl }}</span>
+                </div>
+
+                <div class="individual-scores">
+                    {% for name, score in report.policy_health_score.items() %}
+                        {% if name != 'overall' %}
+                        <div class="ind-score-item">
+                            <span class="ind-score-name">{{ name | replace('_', ' ') }}</span>
+                            <span class="ind-score-val">{{ score }}%</span>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </aside>
+
+            <!-- Main Content: Findings -->
+            <main class="findings-section">
+                <h2>Findings & Overlaps ({{ report.findings | length }})</h2>
+                
+                {% if report.findings | length == 0 %}
+                <div class="no-findings">
+                    <span class="no-findings-icon">✓</span>
+                    <h3>No Issues Detected</h3>
+                    <p style="margin-top: 0.5rem; font-weight: 300;">This policy satisfies the consistency, non-staleness, and clarity checks.</p>
+                </div>
+                {% else %}
+                    {% for finding in report.findings %}
+                        {% set severity = finding.severity | upper %}
+                        {% if severity == 'HIGH' %}
+                            {% set border_color = "var(--color-danger)" %}
+                            {% set badge_class = "high" %}
+                        {% elif severity == 'MEDIUM' %}
+                            {% set border_color = "var(--color-warning)" %}
+                            {% set badge_class = "medium" %}
+                        {% else %}
+                            {% set border_color = "var(--color-info)" %}
+                            {% set badge_class = "low" %}
+                        {% endif %}
+
+                        <div class="finding-card" style="--accent-color: {{ border_color }};">
+                            <div class="finding-header">
+                                <div class="finding-title-row">
+                                    <span class="finding-badge {{ badge_class }}">{{ severity }}</span>
+                                    <span class="finding-type">{{ finding.finding_type }}</span>
+                                </div>
+                                <div class="finding-policy">{{ finding.policy }}</div>
+                            </div>
+                            <div class="finding-body">
+                                {{ finding.description }}
+                            </div>
+                            
+                            {% if finding.recommendation %}
+                            <div class="finding-remediation">
+                                <div class="finding-remediation-title">Recommended Remediation</div>
+                                <div class="finding-remediation-text">{{ finding.recommendation }}</div>
+                            </div>
+                            {% endif %}
+
+                            {% if finding.compliance_impact %}
+                            <div class="compliance-tags">
+                                <span class="compliance-lbl">Compliance standards:</span>
+                                {% for standard in finding.compliance_impact %}
+                                <span class="compliance-tag">{{ standard }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </main>
+        </div>
+    </div>
+</body>
+</html>
