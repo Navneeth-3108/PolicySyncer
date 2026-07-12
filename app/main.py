@@ -47,8 +47,8 @@ def run_analysis_pipeline(raw_text: str) -> dict:
 
     layer1_dicts = [r.to_dict() for r in layer1_records]
     
-    # Layer 2: Analysis (use loosened threshold)
-    layer2_config = Layer2Config(blocking_similarity_threshold=0.0)
+    # Layer 2: Analysis
+    layer2_config = Layer2Config()
     layer2_output = run_layer2(layer1_dicts, config=layer2_config)
     
     # Layer 3: Recommendations & Reporting

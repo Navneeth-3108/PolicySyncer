@@ -100,7 +100,9 @@ def evaluate_conflict(
             )
         return None
 
-    nli_score = nli_engine.contradiction_score(a.raw_text, b.raw_text, a.modality, b.modality)
+    nli_score = nli_engine.contradiction_score(
+        a.raw_text, b.raw_text, a.modality, b.modality, action_similarity
+    )
     if nli_score < config.nli_contradiction_confirm_threshold:
         return None  # Stage B failed to confirm the Stage A candidate
 

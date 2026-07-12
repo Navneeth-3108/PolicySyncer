@@ -75,8 +75,7 @@ def main():
     print("LAYER 2: Semantic Conflict, Redundancy, Scope & Staleness Reasoning")
     print("-" * 70)
     try:
-        # Use loosened threshold if no advanced NLP models are available
-        layer2_config = Layer2Config(blocking_similarity_threshold=0.0)
+        layer2_config = Layer2Config()
         layer2_output = run_layer2(layer1_dicts, config=layer2_config)
 
         print(f"✓ Found {len(layer2_output.findings)} findings")

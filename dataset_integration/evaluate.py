@@ -171,12 +171,7 @@ def run_evaluation(dataset_dir: str, layer2_config: Optional[Layer2Config] = Non
     # dict is directly usable without re-parsing anything.
     ob_to_file = _build_obligation_id_to_file(layer1_dicts, name_to_file)
 
-    # Loosen the blocking threshold like run_pipeline.py does -- this repo
-    # has zero hard NLP dependencies, so without sentence-transformers the
-    # blocking-stage embedding similarity defaults to a weaker fallback and
-    # a high threshold would silently drop real candidate pairs before the
-    # conflict/redundancy reasoners ever see them.
-    layer2_config = layer2_config or Layer2Config(blocking_similarity_threshold=0.0)
+    layer2_config = layer2_config or Layer2Config()
     layer2_output = run_layer2(layer1_dicts, config=layer2_config)
 
     labels = _load_labels(dataset_dir)
