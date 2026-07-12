@@ -53,11 +53,23 @@ def evaluate_redundancy(
             embedding_similarity=action_similarity, scope_result=scope_result,
         )
 
-    if scope_result.combined in ("SUPERSET", "SUBSET") and action_similarity >= config.blocking_similarity_threshold:
-        stronger, weaker, detail = (
+    # SUBSUMPTION asserts the two obligations are the SAME requirement stated
+    # at different scopes, so it needs near-paraphrase action overlap -- not
+    # merely the low "avoid-unrelated" blocking bar, which would call two
+    # different same-category rules (e.g. password length vs rotation) a
+    # subsumption just because one scope nests inside the other.
+    if scope_result.combined in ("SUPERSET", "SUBSET") and action_similarity >= config.action_similarity_high_threshold:
+        # combined == "SUBSET" means a's scope ⊂ b's scope (b is broader);
+        # "SUPERSET" means a ⊃ b (a is broader). Bind narrower/broader
+        # explicitly so the strength test isn't accidentally inverted.
+        narrower, broader, detail = (
             (a, b, "SUBSUMES_A_BY_B") if scope_result.combined == "SUBSET" else (b, a, "SUBSUMES_B_BY_A")
         )
-        if stronger.modal_strength >= weaker.modal_strength:
+        # The narrow obligation is truly redundant (subsumed) only when the
+        # BROADER rule already imposes an at-least-as-strong duty on it. If the
+        # narrower rule is the stronger one, it is NOT redundant -- it adds a
+        # stricter requirement -- so fall through to PARTIAL_REDUNDANCY.
+        if broader.modal_strength >= narrower.modal_strength:
             return RedundancyCandidate(
                 a=a, b=b, finding_type="SUBSUMPTION", relation_detail=detail,
                 embedding_similarity=action_similarity, scope_result=scope_result,

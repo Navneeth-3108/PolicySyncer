@@ -60,6 +60,13 @@ _ACTOR_BEFORE_MODAL_RE = re.compile(
     r"^(?P<actor>[A-Za-z][\w\s\-]*?)\s+(?=\b(?:must|shall|should|may|is)\b)"
 )
 
+# Words that can immediately follow a modal in a passive/adjectival
+# construction but are never the obligation's action verb.
+_PREPOSITION_NONVERBS = {
+    "for", "to", "by", "with", "of", "from", "on", "in", "at", "as", "into",
+    "under", "over", "per", "via", "about",
+}
+
 
 @dataclass
 class SlotResult:
@@ -113,23 +120,33 @@ class RegexSlotExtractor:
         if verb_m:
             action = verb_m.group("verb").lower()
             rest = verb_m.group("rest") or ""
-            # naive object = first few words up to a comma/qualifier list or
-            # a temporal/exception marker
-            stop_re = re.compile(
-                r"\b(every|within|for|unless|except|excepting|excluding|other than|"
-                r"with the exception of)\b",
-                re.IGNORECASE,
-            )
-            stop_m = stop_re.search(rest)
-            main_part = rest[: stop_m.start()].strip() if stop_m else rest.strip()
-
-            if "," in main_part:
-                # e.g. "at least 12 characters with uppercase, lowercase, ..."
-                head, _, tail = main_part.partition(",")
-                obj = head.strip().rstrip(",") or None
-                qualifiers = _extract_qualifiers(tail)
+            if action in _PREPOSITION_NONVERBS:
+                # Passive constructions like "Access is prohibited for all
+                # users" leave a bare preposition immediately after the modal,
+                # so the naive "first word = verb" rule grabs "for"/"to"/... as
+                # the action. The real topic is the pre-modal subject (the
+                # actor); don't emit a preposition as the action.
+                if actor and actor != "UNSPECIFIED":
+                    obj = actor
+                action = "UNSPECIFIED"
             else:
-                obj = main_part.strip().rstrip(".") or None
+                # naive object = first few words up to a comma/qualifier list or
+                # a temporal/exception marker
+                stop_re = re.compile(
+                    r"\b(every|within|for|unless|except|excepting|excluding|other than|"
+                    r"with the exception of)\b",
+                    re.IGNORECASE,
+                )
+                stop_m = stop_re.search(rest)
+                main_part = rest[: stop_m.start()].strip() if stop_m else rest.strip()
+
+                if "," in main_part:
+                    # e.g. "at least 12 characters with uppercase, lowercase, ..."
+                    head, _, tail = main_part.partition(",")
+                    obj = head.strip().rstrip(",") or None
+                    qualifiers = _extract_qualifiers(tail)
+                else:
+                    obj = main_part.strip().rstrip(".") or None
 
         if actor is None or actor == "":
             actor = "UNSPECIFIED"

@@ -11,11 +11,33 @@ from typing import Dict, List, Tuple
 @dataclass
 class Config:
     # ---- §3.5 / §3.3 Stage A blocking ----
-    blocking_similarity_threshold: float = 0.13     # low bar, recall-favoring
-    action_similarity_high_threshold: float = 0.15  # §4.1 near-paraphrase bar
+    # Stage A is only meant to *avoid comparing unrelated obligations*, but a
+    # 0.13 bar on a TF-IDF token bag admits any pair sharing a single content
+    # word, so nearly every same-category pair reached Stage B and the corpus
+    # produced ~13x too many conflicts / ~23x too many redundancies. Raised to
+    # a level that still favors recall but requires real action overlap.
+    blocking_similarity_threshold: float = 0.28     # avoid-unrelated bar
+    # §4.1 near-paraphrase bar -- gates REDUNDANCY/EXACT, PARTIAL_REDUNDANCY,
+    # SUBSUMPTION, and the "same action, opposing modality" contradiction
+    # signal. 0.15 was "shares one token", not a paraphrase. Measured on the
+    # SBERT backend, genuinely same-action pairs (e.g. "rotate every 90 days"
+    # vs "rotation shall not be required") sit ~0.60, while merely same-topic
+    # pairs (password *length* vs password *reuse*) sit ~0.54 -- so the bar is
+    # set just above the same-topic band to require true action overlap before
+    # two rules are called a conflict/redundancy/subsumption.
+    action_similarity_high_threshold: float = 0.56
 
     # ---- §3.3 Stage B semantic confirmation ----
     nli_contradiction_confirm_threshold: float = 0.55
+    # MNLI checkpoints tried in order for the trained Stage-B backend; the
+    # first that loads is used, else the heuristic fallback runs. (The old
+    # hardcoded "microsoft/deberta-v3-base-mnli" was delisted from HF, which
+    # silently forced the heuristic path.) Set to a single-item list to pin one.
+    nli_model_candidates: Tuple[str, ...] = (
+        "MoritzLaurer/DeBERTa-v3-base-mnli-fever-anli",
+        "roberta-large-mnli",
+        "facebook/bart-large-mnli",
+    )
     nli_neutral_band: Tuple[float, float] = (0.35, 0.55)
 
     # ---- §8.2 reasoning-confidence linear-combination weights ----
@@ -60,7 +82,13 @@ class Config:
     deprecated_technologies: List[str] = field(default_factory=lambda: [
         "tls 1.0", "tls 1.1", "sha-1", "sha1", "md5", "des", "3des",
         "windows server 2012", "windows server 2008", "ssl 3.0", "ssl 2.0",
-        "rc4", "wep", "ftp", "sox 2002", "gdpr 2016",
+        "rc4", "wep", "ftp",
+        # NOTE: "sox 2002" / "gdpr 2016" were removed -- these are regulations
+        # routinely (and correctly) cited by their enactment year, so flagging
+        # them as "deprecated technology" produced false STALE findings. A
+        # real deployment that wants to detect *outdated regulation citations*
+        # should do so with a dedicated, version-aware check, not this flat
+        # deprecated-technology list.
     ])
     superseded_standards: Dict[str, str] = field(default_factory=lambda: {
         # cited-standard token (lowercased substring match) -> note

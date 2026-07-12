@@ -20,23 +20,42 @@ from typing import Optional
 _HF_PIPELINE = None
 _HF_AVAILABLE = False
 
-def _try_load_hf_nli():
+# Candidate MNLI checkpoints, tried in order. The original hardcoded id
+# "microsoft/deberta-v3-base-mnli" was REMOVED from the HuggingFace Hub (its
+# config.json now 404s), so Stage B could never load and the pipeline silently
+# ran on the heuristic stand-in forever. These are current, publicly available
+# MNLI models that expose the same entailment/neutral/contradiction labels the
+# _hf_score reader expects; the first that loads wins.
+_DEFAULT_NLI_MODELS = [
+    "MoritzLaurer/DeBERTa-v3-base-mnli-fever-anli",
+    "roberta-large-mnli",
+    "facebook/bart-large-mnli",
+]
+
+
+def _try_load_hf_nli(model_candidates=None):
     global _HF_PIPELINE, _HF_AVAILABLE
     if _HF_PIPELINE is not None or _HF_AVAILABLE:
         return
     try:
         from transformers import pipeline  # type: ignore
-        _HF_PIPELINE = pipeline("text-classification", model="microsoft/deberta-v3-base-mnli")
-        _HF_AVAILABLE = True
     except Exception:
-        _HF_PIPELINE = None
-        _HF_AVAILABLE = False
+        _HF_PIPELINE, _HF_AVAILABLE = None, False
+        return
+    for model_name in (model_candidates or _DEFAULT_NLI_MODELS):
+        try:
+            _HF_PIPELINE = pipeline("text-classification", model=model_name)
+            _HF_AVAILABLE = True
+            return
+        except Exception:
+            continue
+    _HF_PIPELINE, _HF_AVAILABLE = None, False
 
 
 class NLIEngine:
     def __init__(self, config):
         self.config = config
-        _try_load_hf_nli()
+        _try_load_hf_nli(getattr(config, "nli_model_candidates", None))
         self.backend = "transformers-nli" if _HF_AVAILABLE else "heuristic-fallback"
 
     def contradiction_score(

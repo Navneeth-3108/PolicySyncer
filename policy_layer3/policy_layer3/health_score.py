@@ -34,8 +34,14 @@ def compute_health_scores(
         slug = citation_index.slug_for(record.policy_name)
         penalty[slug] = penalty.get(slug, 0.0) + weight.get(record.severity, 0.0)
 
+    # Penalty maps 1:1 into a 0-100 deduction (capped so the score floors at 0,
+    # not below). The previous formula multiplied the capped penalty by 0.7,
+    # which made the deduction top out at 70 -- so no policy could ever score
+    # below 30% and the entire 0-29 "CRITICAL" band was unreachable no matter
+    # how many HIGH conflicts a policy had. With HIGH=30/MEDIUM=20/LOW=8, a
+    # single HIGH now yields 70 (Warning), two HIGH -> 40 (Critical).
     scores: Dict[str, int] = {
-        slug: max(0, round(100 - min(p, 100) * 0.7)) for slug, p in penalty.items()
+        slug: max(0, round(100 - min(p, 100))) for slug, p in penalty.items()
     }
     overall = round(sum(scores.values()) / len(scores)) if scores else 100
     scores["overall"] = overall

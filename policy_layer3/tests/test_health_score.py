@@ -49,17 +49,18 @@ def test_high_severity_conflict_penalizes_both_sides_full_weight():
     config = Layer3Config()  # default two_sided_penalty_mode = "full"
     scores = compute_health_scores([_finding("HIGH")], [], _index(), config)
     # HIGH weight = 30, both policies appear in the pairwise finding -> both
-    # penalized 30, then soft-clamped: 100 - min(30, 100) * 0.7 = 79.
-    assert scores["password_policy"] == 79
-    assert scores["cloud_security_policy"] == 79
-    assert scores["overall"] == 79
+    # penalized 30: 100 - min(30, 100) = 70.
+    assert scores["password_policy"] == 70
+    assert scores["cloud_security_policy"] == 70
+    assert scores["overall"] == 70
 
 
 def test_half_penalty_mode_splits_weight_across_sides():
     config = Layer3Config(two_sided_penalty_mode="half")
     scores = compute_health_scores([_finding("HIGH")], [], _index(), config)
-    assert scores["password_policy"] == 90
-    assert scores["cloud_security_policy"] == 90
+    # half weight = 15 each: 100 - min(15, 100) = 85.
+    assert scores["password_policy"] == 85
+    assert scores["cloud_security_policy"] == 85
 
 
 def test_staleness_penalizes_only_its_own_policy():
@@ -70,7 +71,7 @@ def test_staleness_penalizes_only_its_own_policy():
         severity="MEDIUM", confidence=1.0,
     )
     scores = compute_health_scores([], [record], _index(), Layer3Config())
-    assert scores["password_policy"] == 86   # 100 - 20 (MEDIUM weight) * 0.7
+    assert scores["password_policy"] == 80   # 100 - 20 (MEDIUM weight)
     assert scores["cloud_security_policy"] == 100
 
 
@@ -78,7 +79,7 @@ def test_scores_never_go_below_zero():
     config = Layer3Config()
     findings = [_finding("HIGH") for _ in range(10)]  # 10x HIGH = way past 100 penalty
     scores = compute_health_scores(findings, [], _index(), config)
-    # penalty is clamped to 100 before the 0.7 dampening factor is applied,
-    # so the floor is 100 - 100 * 0.7 = 30, not 0.
-    assert scores["password_policy"] == 30
-    assert scores["cloud_security_policy"] == 30
+    # penalty (300) is clamped to a 100-point deduction, so the score floors
+    # at 0 -- the full CRITICAL band is reachable for a badly-conflicted policy.
+    assert scores["password_policy"] == 0
+    assert scores["cloud_security_policy"] == 0

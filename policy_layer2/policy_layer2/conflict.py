@@ -100,11 +100,25 @@ def evaluate_conflict(
             )
         return None
 
-    nli_score = nli_engine.contradiction_score(
-        a.raw_text, b.raw_text, a.modality, b.modality, action_similarity
-    )
-    if nli_score < config.nli_contradiction_confirm_threshold:
-        return None  # Stage B failed to confirm the Stage A candidate
+    if is_direct_opposition:
+        # DIRECT / opposing-modality conflicts are confirmed by the NLI
+        # contradiction signal (Stage B).
+        nli_score = nli_engine.contradiction_score(
+            a.raw_text, b.raw_text, a.modality, b.modality, action_similarity
+        )
+        if nli_score < config.nli_contradiction_confirm_threshold:
+            return None  # Stage B failed to confirm the Stage A candidate
+    else:
+        # STRENGTH / same-polarity-different-strength conflicts (e.g. "must
+        # rotate every 90 days" vs "every 365 days") have IDENTICAL modality,
+        # so the deontic-opposition NLI heuristic can never score them -- it
+        # would silently drop every STRENGTH conflict. Confirm these on the
+        # signal that actually distinguishes them: the two obligations must be
+        # about the same action (near-paraphrase) for a strength/parameter
+        # disagreement to be a genuine conflict rather than two unrelated rules.
+        if action_similarity < config.action_similarity_high_threshold:
+            return None
+        nli_score = 0.0
 
     subtype, modality_certainty = _classify_subtype(a, b, scope_result, is_direct_opposition, same_polarity_diff_strength)
 

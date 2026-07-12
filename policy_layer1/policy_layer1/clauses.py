@@ -15,6 +15,16 @@ _ABBREVIATIONS = {"e.g.", "i.e.", "u.s.", "u.s.a.", "etc.", "vs.", "mr.", "mrs."
 
 _SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])\s+(?=[A-Z])")
 
+# A sentence-final parenthetical (e.g. a "(Reference: TLS 1.0)" citation) sits
+# between the terminating "." and the next sentence's capital letter, which the
+# bare rule above cannot see past -- so consecutive obligations that each end
+# in a citation were merged into one clause, leaking one obligation's text into
+# the next one's actor/object. This pass attaches the parenthetical to the
+# sentence it closes and marks the boundary that follows it, so the split below
+# separates the two obligations while keeping each citation with its own text.
+_SENT_BOUNDARY = chr(0xE000)  # private-use marker, never appears in policy text
+_TRAILING_PAREN_RE = re.compile(r"([.!?]\s*\([^)]*\))\s+(?=[A-Z])")
+
 
 @dataclass
 class Clause:
@@ -44,9 +54,12 @@ def _restore_abbreviations(text: str) -> str:
 def split_sentences(section_body: str) -> List[str]:
     """§2.5 — split into candidate sentences, guarding against abbreviations."""
     protected = _protect_abbreviations(section_body)
+    # Attach a trailing parenthetical to the sentence it closes and insert an
+    # explicit boundary marker after it, then split on both that marker and the
+    # ordinary sentence rule.
+    protected = _TRAILING_PAREN_RE.sub(lambda m: m.group(1) + _SENT_BOUNDARY, protected)
     parts = _SENTENCE_SPLIT_RE.split(protected)
-    # also split on end-of-string implicitly handled since regex only splits
-    # between sentences; trailing sentence is the last element.
+    parts = [seg for p in parts for seg in p.split(_SENT_BOUNDARY)]
     return [_restore_abbreviations(p).strip() for p in parts if p.strip()]
 
 

@@ -66,8 +66,13 @@ def _review_age_signal(months: Optional[float], config) -> StalenessSignal:
         return StalenessSignal("review_age", False, config.staleness_signal_weights["review_age"], 0.0,
                                 "last_reviewed missing or unparseable")
     fired = months >= config.staleness_age_months_threshold
-    # confidence scales smoothly past the threshold rather than a hard 0/1 step
-    conf = min(1.0, max(0.0, (months - config.staleness_age_months_threshold) / config.staleness_age_months_threshold)) if fired else 0.0
+    # Confidence scales smoothly past the threshold, but a *fired* signal must
+    # start from a meaningful floor (0.5), not ~0. With the old formula a
+    # just-past-threshold review_age (conf ~0.05) added its full weight to the
+    # fusion denominator while contributing almost nothing to the numerator,
+    # so a policy that was BOTH old AND used deprecated tech scored *lower*
+    # than one that only used deprecated tech -- more evidence, weaker verdict.
+    conf = min(1.0, 0.5 + 0.5 * (months - config.staleness_age_months_threshold) / config.staleness_age_months_threshold) if fired else 0.0
     return StalenessSignal("review_age", fired, config.staleness_signal_weights["review_age"], conf,
                             f"{months} months since last review (threshold {config.staleness_age_months_threshold})")
 

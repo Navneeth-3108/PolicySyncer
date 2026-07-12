@@ -30,6 +30,18 @@ def _slugify(name: str) -> str:
 
 _CONJ_RE = re.compile(r"\b(?:and|or)\b\s*,?\s*|,\s*")
 
+# "(Reference: ...)" citations are metadata, not obligation content. They must
+# stay in raw_text (Layer 2 staleness scans it for deprecated-tech/superseded-
+# standard references), but they must NOT reach slot extraction or category
+# classification -- otherwise e.g. "(Reference: TLS 1.0)" on a network rule
+# makes it classify as `encryption`, and the citation tokens leak into the
+# object slot.
+_CITATION_RE = re.compile(r"\s*\(\s*reference\s*:[^)]*\)", re.IGNORECASE)
+
+
+def _strip_citations(text: str) -> str:
+    return _CITATION_RE.sub("", text).strip()
+
 
 def _split_multi_clause(
     clause_text: str, modal_matches: List[ModalMatch]
@@ -108,9 +120,12 @@ def _build_obligation(
         flags.append("contradictory_modal_in_clause")
 
     # exception clause (§5.7) — extracted from the sub-clause, then stripped
-    # before slot extraction so it doesn't pollute actor/object.
+    # before slot extraction so it doesn't pollute actor/object. Citations
+    # (§ "(Reference: ...)") are stripped for the same reason, but only from
+    # the slot/category/temporal input -- raw_text (clause.text) keeps them.
     exception = extract_exception(sub_text)
     slot_input_text = strip_exception_clause(sub_text) if exception else sub_text
+    slot_input_text = _strip_citations(slot_input_text)
 
     slots: SlotResult = slot_extractor.extract(slot_input_text, modal)
     flags.extend(slots.flags)

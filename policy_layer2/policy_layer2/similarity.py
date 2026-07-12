@@ -51,10 +51,22 @@ _STOPWORDS = {
 }
 
 
+def _stem(tok: str) -> str:
+    """Light inflectional normalizer: fold common English suffixes so
+    "passwords"/"password" and "rotating"/"rotate" match, WITHOUT the old
+    fixed 5-char truncation that conflated unrelated words ("encryption" and
+    "encrypted" -> "encry", but also "configure"/"confidential" -> "confi").
+    Only strips a suffix when a reasonable stem (>= 3 chars) remains."""
+    for suffix in ("ing", "ed", "es", "s"):
+        if tok.endswith(suffix) and len(tok) - len(suffix) >= 3:
+            return tok[: -len(suffix)]
+    return tok
+
+
 def _tokenize(text: str) -> List[str]:
     raw = _TOKEN_RE.findall((text or "").lower())
     raw = [t for t in raw if t not in _STOPWORDS]
-    return [tok[:5] if len(tok) > 5 else tok for tok in raw]
+    return [_stem(tok) for tok in raw]
 
 
 class SimilarityEngine:
