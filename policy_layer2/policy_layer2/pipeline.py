@@ -58,7 +58,7 @@ def run_layer2(policy_records: List[Dict[str, Any]], config: Config = None) -> L
         for a, b, action_sim in candidates:
             pair_key = frozenset({a.obligation_id, b.obligation_id})
 
-            conflict_candidate = evaluate_conflict(a, b, action_sim, lattice, nli_engine)
+            conflict_candidate = evaluate_conflict(a, b, action_sim, lattice, nli_engine, config)
             if conflict_candidate is not None:
                 finding = _build_conflict_finding(conflict_candidate, config)
                 if finding is not None:

@@ -47,6 +47,7 @@ def evaluate_conflict(
     action_similarity: float,
     lattice: ScopeLattice,
     nli_engine: NLIEngine,
+    config,
 ) -> Optional[ConflictCandidate]:
     """
     Returns a ConflictCandidate if this pair constitutes some form of
@@ -100,6 +101,8 @@ def evaluate_conflict(
         return None
 
     nli_score = nli_engine.contradiction_score(a.raw_text, b.raw_text, a.modality, b.modality)
+    if nli_score < config.nli_contradiction_confirm_threshold:
+        return None  # Stage B failed to confirm the Stage A candidate
 
     subtype, modality_certainty = _classify_subtype(a, b, scope_result, is_direct_opposition, same_polarity_diff_strength)
 

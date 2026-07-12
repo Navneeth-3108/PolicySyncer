@@ -30,9 +30,11 @@ def test_obligation_vs_prohibition_same_scope_is_direct_conflict():
     config = Config()
     lattice = ScopeLattice(config)
     nli = NLIEngine(config)
-    a = _prop(obligation_id="A", modal_normalized="must", polarity="positive")
-    b = _prop(obligation_id="B", modal_normalized="must", polarity="negative")
-    result = evaluate_conflict(a, b, action_similarity=0.9, lattice=lattice, nli_engine=nli)
+    a = _prop(obligation_id="A", modal_normalized="must", polarity="positive",
+              raw_text="must encrypt data")
+    b = _prop(obligation_id="B", modal_normalized="must", polarity="negative",
+              raw_text="must not encrypt data")
+    result = evaluate_conflict(a, b, action_similarity=0.9, lattice=lattice, nli_engine=nli, config=config)
     assert result is not None
     assert result.subtype == "DIRECT"
 
@@ -45,7 +47,7 @@ def test_disjoint_scope_suppresses_conflict_entirely():
               scope={"role": None, "system": None, "geography": "eu"})
     b = _prop(obligation_id="B", modal_normalized="must", polarity="negative",
               scope={"role": None, "system": None, "geography": "us"})
-    result = evaluate_conflict(a, b, action_similarity=0.9, lattice=lattice, nli_engine=nli)
+    result = evaluate_conflict(a, b, action_similarity=0.9, lattice=lattice, nli_engine=nli, config=config)
     assert result is None
 
 
@@ -62,7 +64,7 @@ def test_exception_scope_override_suppresses_conflict():
         obligation_id="B", modal_normalized="may", polarity="positive",
         scope={"role": None, "system": "CI/CD", "geography": None},
     )
-    result = evaluate_conflict(a, b, action_similarity=0.9, lattice=lattice, nli_engine=nli)
+    result = evaluate_conflict(a, b, action_similarity=0.9, lattice=lattice, nli_engine=nli, config=config)
     assert result is None
 
 
@@ -71,9 +73,11 @@ def test_partial_overlap_when_scope_is_subset_superset():
     lattice = ScopeLattice(config)
     nli = NLIEngine(config)
     a = _prop(obligation_id="A", modal_normalized="must", polarity="positive",
-              scope={"role": "all employees", "system": None, "geography": None})
+              scope={"role": "all employees", "system": None, "geography": None},
+              raw_text="all employees must encrypt data")
     b = _prop(obligation_id="B", modal_normalized="must", polarity="negative",
-              scope={"role": "developers", "system": None, "geography": None})
-    result = evaluate_conflict(a, b, action_similarity=0.9, lattice=lattice, nli_engine=nli)
+              scope={"role": "developers", "system": None, "geography": None},
+              raw_text="developers must not encrypt data")
+    result = evaluate_conflict(a, b, action_similarity=0.9, lattice=lattice, nli_engine=nli, config=config)
     assert result is not None
     assert result.subtype == "PARTIAL_OVERLAP"

@@ -82,13 +82,15 @@ class NLIEngine:
             frozenset({"PERMISSION", "PROHIBITION"}),
         }
         if modality_a and modality_b and frozenset({modality_a, modality_b}) in opposing_pairs:
-            score += 0.55
+            score += 0.30
 
         # Lexical negation asymmetry: one side carries an explicit negation
         # cue the other lacks, over otherwise-similar text.
         neg_p = any(cue in p for cue in _NEGATION_CUES)
         neg_h = any(cue in h for cue in _NEGATION_CUES)
         if neg_p != neg_h:
-            score += 0.25
+            score += 0.35
+        else:
+            score += 0.0
 
         return max(0.0, min(1.0, score))

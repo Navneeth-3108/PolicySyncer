@@ -35,7 +35,7 @@ def compute_health_scores(
         penalty[slug] = penalty.get(slug, 0.0) + weight.get(record.severity, 0.0)
 
     scores: Dict[str, int] = {
-        slug: max(0, round(100 - p)) for slug, p in penalty.items()
+        slug: max(0, round(100 - min(p, 100) * 0.7)) for slug, p in penalty.items()
     }
     overall = round(sum(scores.values()) / len(scores)) if scores else 100
     scores["overall"] = overall
