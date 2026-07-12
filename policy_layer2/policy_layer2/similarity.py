@@ -43,9 +43,17 @@ def _try_load_sbert(model_name: str):
 
 _TOKEN_RE = re.compile(r"[a-z0-9]+")
 
+_STOPWORDS = {
+    "a", "an", "the", "all", "must", "shall", "may", "should", "not",
+    "for", "with", "of", "to", "be", "is", "are", "was", "were", "their",
+    "its", "it", "this", "that", "on", "in", "at", "every", "per", "and",
+    "or", "if", "then",
+}
+
 
 def _tokenize(text: str) -> List[str]:
     raw = _TOKEN_RE.findall((text or "").lower())
+    raw = [t for t in raw if t not in _STOPWORDS]
     return [tok[:5] if len(tok) > 5 else tok for tok in raw]
 
 

@@ -11,8 +11,8 @@ from typing import Dict, List, Tuple
 @dataclass
 class Config:
     # ---- §3.5 / §3.3 Stage A blocking ----
-    blocking_similarity_threshold: float = 0.55     # low bar, recall-favoring
-    action_similarity_high_threshold: float = 0.80  # §4.1 near-paraphrase bar
+    blocking_similarity_threshold: float = 0.13     # low bar, recall-favoring
+    action_similarity_high_threshold: float = 0.15  # §4.1 near-paraphrase bar
 
     # ---- §3.3 Stage B semantic confirmation ----
     nli_contradiction_confirm_threshold: float = 0.55

@@ -64,10 +64,13 @@ class DeonticProposition:
 
     @property
     def action_text_for_embedding(self) -> str:
-        # action + object + qualifiers, per §3.2 -- this is what gets embedded,
-        # not the full raw_text, so paraphrases with different surrounding
-        # sentence structure still align.
-        return self.action_canonical
+        # EMERGENCY FIX: action_canonical is unreliable for passive/fronted-
+        # subject sentences (Layer 1's extractor drops the real topic, e.g.
+        # "Password rotation shall not be required..." -> action="be",
+        # object="required", losing "password rotation" entirely). raw_text
+        # always retains the full sentence content, so blocking/NLI have a
+        # real signal to work with even when action/object extraction fails.
+        return self.raw_text or self.action_canonical
 
 
 def build_deontic_proposition(obligation: Dict[str, Any], policy_name: str) -> DeonticProposition:

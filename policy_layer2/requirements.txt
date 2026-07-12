@@ -4,5 +4,7 @@
 pytest
 
 # Optional upgrades (auto-detected at runtime, nothing breaks if absent):
-#   pip install sentence-transformers   # real SBERT embeddings (similarity.py)
-#   pip install transformers torch      # real NLI contradiction model (nli.py)
+sentence-transformers   # real SBERT embeddings (similarity.py)
+transformers             # real NLI contradiction model (nli.py)
+torch                    # backend for both of the above
+
