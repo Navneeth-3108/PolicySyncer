@@ -45,7 +45,8 @@ _TOKEN_RE = re.compile(r"[a-z0-9]+")
 
 
 def _tokenize(text: str) -> List[str]:
-    return _TOKEN_RE.findall((text or "").lower())
+    raw = _TOKEN_RE.findall((text or "").lower())
+    return [tok[:5] if len(tok) > 5 else tok for tok in raw]
 
 
 class SimilarityEngine:
