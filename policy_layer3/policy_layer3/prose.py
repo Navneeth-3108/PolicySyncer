@@ -112,7 +112,7 @@ _GUIDANCE_QUOTE_RE = re.compile(r'vs current guidance: "([^"]*)"')
 def describe_stale(record: Any) -> str:
     months = record.months_since_review
     age_clause = (
-        f"Last reviewed on {record.last_reviewed} -- over {months / 12:.0f} years ago."
+        f"Last reviewed on {record.last_reviewed} -- over {int(months // 12)} years ago."
         if months is not None and record.last_reviewed
         else "This policy's review date is missing or unparseable."
     )
@@ -135,9 +135,9 @@ def describe_stale(record: Any) -> str:
             signal_clauses.append("its metadata is incomplete, so this assessment carries reduced confidence")
 
     if signal_clauses:
-        return age_clause + " " + "; also, ".join(s[0].upper() + s[1:] for s in signal_clauses[:1]) + (
-            (" " + "; ".join(signal_clauses[1:]) + ".") if len(signal_clauses) > 1 else "."
-        )
+        clauses = list(signal_clauses)
+        clauses[0] = clauses[0][0].upper() + clauses[0][1:]
+        return age_clause + " " + "; also, ".join(clauses) + "."
     return age_clause
 
 

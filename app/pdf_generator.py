@@ -1,6 +1,24 @@
 import datetime
 from fpdf import FPDF
 
+
+def _pdf_safe(text) -> str:
+    """fpdf2's built-in core fonts (helvetica, used throughout this report)
+    only support latin-1/cp1252. Policy obligation text is pasted verbatim
+    from real documents (raw_text quoted in prose.py's _modal_phrase) and
+    routinely contains curly quotes, em/en dashes, ellipses, or accented
+    characters that fall outside latin-1. Writing those straight to a core
+    font raises FPDFUnicodeEncodingException and aborts the whole export.
+    Replace unsupported characters instead of crashing -- this keeps the
+    report readable (an accented name becomes its closest latin-1 spelling,
+    anything with no latin-1 equivalent becomes '?') without failing the
+    entire /export-pdf request over one character in one finding.
+    """
+    if text is None:
+        return ""
+    return str(text).encode("latin-1", errors="replace").decode("latin-1")
+
+
 class PolicyReportPDF(FPDF):
     def header(self):
         # Draw a subtle header background bar
@@ -61,6 +79,7 @@ def generate_report_pdf(report: dict) -> bytes:
             display_name = name.replace("_", " ").title()
             if display_name.lower() == "overall":
                 display_name = "Overall Pipeline Health Score"
+            display_name = _pdf_safe(display_name)
                 
             pdf.set_font('helvetica', 'B', 10)
             pdf.set_text_color(31, 41, 55) # Gray-800
@@ -101,13 +120,15 @@ def generate_report_pdf(report: dict) -> bytes:
     else:
         for idx, finding in enumerate(findings, 1):
             severity = finding.get("severity", "LOW")
-            f_type = finding.get("finding_type", "INFO")
-            policy_name = finding.get("policy") or " / ".join(
-                p for p in (finding.get("policy_a"), finding.get("policy_b")) if p
-            ) or "Unknown Policy"
-            description = finding.get("description", "")
-            recommendation = finding.get("recommendation", "")
-            compliance = finding.get("compliance_impact", [])
+            f_type = _pdf_safe(finding.get("finding_type", "INFO"))
+            policy_name = _pdf_safe(
+                finding.get("policy") or " / ".join(
+                    p for p in (finding.get("policy_a"), finding.get("policy_b")) if p
+                ) or "Unknown Policy"
+            )
+            description = _pdf_safe(finding.get("description", ""))
+            recommendation = _pdf_safe(finding.get("recommendation", ""))
+            compliance = [_pdf_safe(c) for c in finding.get("compliance_impact", [])]
             
             # Header line: e.g. "1. [HIGH] STALE in Password Policy"
             pdf.set_font('helvetica', 'B', 10)
@@ -136,7 +157,16 @@ def generate_report_pdf(report: dict) -> bytes:
             pdf.set_font('helvetica', '', 9)
             pdf.multi_cell(0, 5, '    ' + description)
             pdf.ln(1)
-            
+
+            # Scope Analysis (CONFLICT findings only, when non-trivial)
+            scope_analysis = _pdf_safe(finding.get("scope_analysis", ""))
+            if scope_analysis:
+                pdf.set_font('helvetica', 'B', 9)
+                pdf.cell(0, 5, '  Scope Analysis:', ln=1)
+                pdf.set_font('helvetica', '', 9)
+                pdf.multi_cell(0, 5, '    ' + scope_analysis)
+                pdf.ln(1)
+
             # Recommendation
             if recommendation:
                 pdf.set_font('helvetica', 'B', 9)

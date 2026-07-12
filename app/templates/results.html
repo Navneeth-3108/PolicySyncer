@@ -331,6 +331,29 @@
             color: #d1d5db;
         }
 
+        .finding-scope {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-left: 3px solid var(--color-info);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .finding-scope-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--color-info);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-scope-text {
+            font-size: 0.925rem;
+            color: #d1d5db;
+        }
+
         .compliance-tags {
             display: flex;
             flex-wrap: wrap;
@@ -508,7 +531,14 @@ Section 3.1: All employees must rotate their passwords every 90 days.</div>
                             <div class="finding-body">
                                 {{ finding.description }}
                             </div>
-                            
+
+                            {% if finding.scope_analysis %}
+                            <div class="finding-scope">
+                                <div class="finding-scope-title">Scope Analysis</div>
+                                <div class="finding-scope-text">{{ finding.scope_analysis }}</div>
+                            </div>
+                            {% endif %}
+
                             {% if finding.recommendation %}
                             <div class="finding-remediation">
                                 <div class="finding-remediation-title">Recommended Remediation</div>
